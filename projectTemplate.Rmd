@@ -1,0 +1,135 @@
+Analysis of Motor Vehicle Collisions in Canada by Jas Sohi
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+
+library(ggplot2)
+library(leaflet) #For interactive maps
+library(DT) #Datatables Javascript
+library(maps)
+```
+
+ABOUT THE DATASET
+
+[National Collision Database (NCDB) - a database containing all police-reported motor vehicle collisions on public roads in Canada. Selected variables (data elements) relating to fatal and injury collisions for the collisions from 1999 to the most recent available data.](http://open.canada.ca/data/en/dataset/1eb9eba7-71d1-4b30-9fb1-30cbdab7e63a)
+
+# Data Wrangling
+I chose to subset this data and only look at the most recent year(2011) due to the enormous size of this dataset with over a million records. This subsetted dataset contains just over 300,000 records.
+
+Each record represents one collision report per person involved in a collision in Canada. So if there were 4 people involved in a collision there would be 4 separate records. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, dataprep}
+### DATA PREPARATION
+###Set the working directory
+# getwd()
+# directory <- "C:/Users/user/version-control/Project-3-Data-Analysis-with-R"
+# setwd(directory)
+### Load up the original dataset
+# df <- read.csv('NCDB_1999_to_2011.csv')
+### Subset the dataset
+# df2011 <- subset(df, C_YEAR == "2011")
+### Export to cwd
+# write.csv(df2011, "NCDB_2011.csv")
+# rm(list=ls()) #removes all variables from the Global Environment 
+```
+
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+
+```
+
+```{r echo=FALSE, Summary}
+# Summarise the Data
+DT::datatable(iris)
+
+```
+
+
+
+
+# Univariate Plots Section
+```{r echo=FALSE, Univariate_Plots}
+
+```
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+### What is/are the main feature(s) of interest in your dataset?
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+### Did you create any new variables from existing variables in the dataset?
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+
+
+# Bivariate Plots Section
+```{r echo=FALSE, Bivariate_Plots}
+
+```
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+### What was the strongest relationship you found?
+
+
+
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plots}
+
+```
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+### Were there any interesting or surprising interactions between features?
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+
+```
+
+### Description One
+
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+
+```
+
+### Description Two
+
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+
+```
+
+### Description Three
+
+------
+
+# Reflection
