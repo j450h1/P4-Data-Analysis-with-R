@@ -13,6 +13,7 @@ library(ggplot2)
 library(leaflet) #For interactive maps
 library(DT) #Datatables Javascript
 library(maps)
+library(plyr)
 ```
 
 ABOUT THE DATASET
@@ -39,19 +40,81 @@ Each record represents one collision report per person involved in a collision i
 # rm(list=ls()) #removes all variables from the Global Environment 
 ```
 
-
 ```{r echo=FALSE, Load_the_Data}
 # Load the Data
+filename <- "NCDB_2011.csv"
+df <- read.csv(filename)
+str(df)
+summary(df)
+#Age should not be a factor
+df2 <- df #create a copy for later
+df$P_AGE <- as.numeric(df$P_AGE)
+# take a random sample of size 50 from a dataset mydata 
+# sample without replacement
+set.seed(1)
+mysample <- df[sample(1:nrow(df), 30000, replace=FALSE),]
+max(table(df$P_AGE))
+qplot(x=P_AGE, data = df)
+qplot(x=P_AGE, data = df, breaks = c(seq(0,99,1)))
+#outliers who are over 100 #could be typos or misreporting
+qplot(x=P_SEX, data = df)
+ggplot(aes(x=P_AGE), data = df) + geom_bar() +
+  facet_wrap(~P_SEX)
+#Looks like many unknowns have an Age of over 90+
+#We will disregard unknown rows 
+#Need to subset only M & F
 
+#What month is the most accidents in?
+
+qplot(x=C_MNTH, data = df)
+#no clear trend
+
+#Makeup of this dataset -most are drivers
+qplot(x=P_USER, data = df)
+#Put in legend
+#Are most drivers male or females?
+qplot(x=P_SEX, data = subset(df, P_USER == 1)) #1 is Motor Vehicle Driver
+#Looks like men
+
+#Breakdown of severity of accident
+qplot(x=P_ISEV, data = subset(df, P_USER == 1)) + #1 is Motor Vehicle Driver
+  theme(panel.background = element_rect(fill = 'white'))
+
+qplot(x=P_ISEV, data = subset(df, P_USER == 2))  + #2 is Motor Vehicle Passenger
+  theme(panel.background = element_rect(fill = 'white'))
+
+#Most motorcyclists are injured in accidents in comparison to m
+qplot(x=P_ISEV, data = subset(df, P_USER == 5)) + #5 is Motorcyclists
+  theme(panel.background = element_rect(fill = 'white'))
+
+#How's the weather like on when there are accidents?
+#On sunny days, perhaps its just because more motorcyclists avoid bad weather.
+qplot(x=C_WTHR, data = subset(df, P_USER == 5)) #5 is Motorcyclists
+#More accidents in rain and snow
+qplot(x=C_WTHR, data = subset(df, P_USER == 1)) + #5 is Driver
+  theme(panel.background = element_rect(fill = 'white'))
+
+#What day of the week has the most accidents?
+qplot(x=C_WDAY, data = subset(df, P_USER == 1)) + 
+  theme(panel.background = element_rect(fill = 'white'))
+#Friday - Perhaps people are in a rush to celebrate the weekend!
+#On Sundays the least amount of accidents, perhaps less people are on the road commuting to work.
+#How about time of the day?
+qplot(x=C_HOUR, data = subset(df, P_USER == 1)) +
+  theme(panel.background = element_rect(fill = 'white'))
+#How about day and hour?
+qplot(x=C_HOUR, data = subset(df, P_USER == 1)) +
+  facet_wrap(~C_WDAY) +
+  theme(panel.background = element_rect(fill = 'white'))
+#Number of vehicles involved in a collision
+qplot(x=C_VEHS, data = subset(df, P_USER == 1)) +
+  theme(panel.background = element_rect(fill = 'white'))
 ```
 
 ```{r echo=FALSE, Summary}
 # Summarise the Data
-DT::datatable(iris)
-
+#What month has the most accidents? Mosaic plot 
 ```
-
-
 
 
 # Univariate Plots Section
