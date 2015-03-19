@@ -1,4 +1,4 @@
-Analysis of Motor Vehicle Collisions in Canada by Jas Sohi
+Analysis of Vehicle Collisions in Canada by Jas Sohi
 ========================================================
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
@@ -14,13 +14,21 @@ library(leaflet) #For interactive maps
 library(DT) #Datatables Javascript
 library(maps)
 library(plyr)
+
+#Global Option to have a black and white theme for all plots
+ggplot <- function(...) { ggplot2::ggplot(...) + theme_bw() }
 ```
 
 ABOUT THE DATASET
 
 [National Collision Database (NCDB) - a database containing all police-reported motor vehicle collisions on public roads in Canada. Selected variables (data elements) relating to fatal and injury collisions for the collisions from 1999 to the most recent available data.](http://open.canada.ca/data/en/dataset/1eb9eba7-71d1-4b30-9fb1-30cbdab7e63a)
 
-# Data Wrangling
+###Goal
+
+The underlying question I will explore in this analysis is what features are common in drivers for accidents that result in fatalities?
+
+###Data Wrangling
+
 I chose to subset this data and only look at the most recent year(2011) due to the enormous size of this dataset with over a million records. This subsetted dataset contains just over 300,000 records.
 
 Each record represents one collision report per person involved in a collision in Canada. So if there were 4 people involved in a collision there would be 4 separate records. 
@@ -44,17 +52,58 @@ Each record represents one collision report per person involved in a collision i
 # Load the Data
 filename <- "NCDB_2011.csv"
 df <- read.csv(filename)
+```
+###Number of records, variables 
+```{r}
+nrow(df) 
+ncol(df)
+```
+###Variable names
+```{r}
+names(df)
+```
+###Structure of the data
+```{r}
 str(df)
-summary(df)
+```
+###Summary of the data
+```{r}
+summary(df2)
+```
+There are three kinds of variables in this dataset: collision-level, vehicle-level, and person-level.
+
+###COLLISIONS
+From an initial look a the summary output, Friday (5) appears to be the weekday with the most number of collisions reported. The 4-5 PM Hour (16) is the most dangerous time for motorists. Most collisions involve 2 vehicles (*C_VEHS*).
+Rear-end collisions (21) are the most common types of accidents (*C_CONF*) and most accidents happen at an intersection (02)
+(*C_RCFG*). Nothing out of the ordinary so far. 
+However, perhaps surprisingly most accidents actually occur on clear and sunny days by a wide margin (1) (*C_WTHR*) and on dry,
+normal (1) (*C_RSUR*) straight and level (1) 
+(*C_RALN*) road surfaces. Finally, most collisions occur where no traffic controls (such as stop signs, police officers, reduced speed zone, etc.) are present.
+
+###VEHICLES
+
+Most collisions involved light duty vehicles such as passenger cars, vans, and light duty pickup trucks (01) (*V_TYPE*).
+Most collisions involve more recent model vehicles, but there doesn't seem to be a large variance between years (*V_YEAR*). 
+
+###PEOPLE
+
+Men are involved in more collisions than women. Many people don't seem to report their age (UU = Unknown) (*P_AGE*), but from the ones that do, most consist of young adults and teenagers (17-21 years old).
+
+About 2/3rds of the reported collisions (each record) are from drivers (11) themselves instead of passengers (*P_PSN*). Only
+```r round((nrow(subset(df,P_ISEV == 3))/nrow(df))*100,digits=2) ``` % of reported collisions involved a fatality (3), while the rest of the collisions were split mostly between injuries/no injuries (*P_ISEV*). In the vast majority of incidents, a safety device such as a seat belt or helmet (for motorcycles, bicyclists,
+snowmobilers, and ATV riders) was worn (02) (*P_SAFE*).
+This highlights the fact that there are different categories of people reporting these collisions, but the vast majority are vehicle drivers (1) and passengers (2) with pedestrians (3) a distant third (*P_USER*).  
+
+###Further data wrangling
+```{r}
 #Age should not be a factor
 df2 <- df #create a copy for later
 df$P_AGE <- as.numeric(df$P_AGE)
-# take a random sample of size 50 from a dataset mydata 
-# sample without replacement
-set.seed(1)
-mysample <- df[sample(1:nrow(df), 30000, replace=FALSE),]
+```
+
 max(table(df$P_AGE))
 qplot(x=P_AGE, data = df)
+ggplot(aes(x=P_AGE), data = df) + geom_bar()
 qplot(x=P_AGE, data = df, breaks = c(seq(0,99,1)))
 #outliers who are over 100 #could be typos or misreporting
 qplot(x=P_SEX, data = df)
@@ -128,7 +177,12 @@ qplot(x=C_VEHS, data = subset(df, P_USER == 1)) +
 
 ### What is/are the main feature(s) of interest in your dataset?
 
+The main features of interest in the data set are *IS_SEV* (the severity of collisions - injury, no injury, or fatality) and *P_AGE* (the age of person involved in collision). I suspect age and some other combination of variables can be helpful in determining what are common variables in deadly collisions.
+
 ### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+In addition to the age of the driver, I think vehicle age (*V_YEAR)*, vehicle type (*V_TYPE*), and gender (*P_SEX*) would be predictive of fatality in collisions. Intuitively, I would expect young teenage males with older vehicles and 
+
 
 ### Did you create any new variables from existing variables in the dataset?
 
