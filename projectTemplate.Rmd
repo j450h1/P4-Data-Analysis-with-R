@@ -1,13 +1,14 @@
-Analysis of Vehicle Collisions in Canada by Jas Sohi
 ========================================================
+Analysis of Vehicle Collisions in Canada by Jas Sohi
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
 # Load all of the packages that you end up using
 # in your analysis in this code chunk.
-
 # Notice that the parameter "echo" was set to FALSE for this code chunk.
 # This prevents the code from displaying in the knitted HTML output.
 # You should set echo=FALSE for all code chunks in your file.
+library(knitr)
+opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 
 library(ggplot2)
 library(leaflet) #For interactive maps
@@ -17,6 +18,56 @@ library(plyr)
 
 #Global Option to have a black and white theme for all plots
 ggplot <- function(...) { ggplot2::ggplot(...) + theme_bw() }
+
+#http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)
+#multiplot function to plot multiple graphs on a single page
+
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
 ```
 
 ABOUT THE DATASET
@@ -29,29 +80,29 @@ The underlying question I will explore in this analysis is what features are com
 
 ###Data Wrangling
 
-I chose to subset this data and only look at the most recent year(2011) due to the enormous size of this dataset with over a million records. This subsetted dataset contains just over 300,000 records.
+I chose to subset this data and only look at the most recent year (2011) due to the enormous size of this dataset with over a million records. This subsetted dataset contains just over 300,000 records.
 
 Each record represents one collision report per person involved in a collision in Canada. So if there were 4 people involved in a collision there would be 4 separate records. 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, dataprep}
-### DATA PREPARATION
+```{r}
+###DATA PREPARATION
 ###Set the working directory
 # getwd()
 # directory <- "C:/Users/user/version-control/Project-3-Data-Analysis-with-R"
 # setwd(directory)
-### Load up the original dataset
+###Load up the original dataset
 # df <- read.csv('NCDB_1999_to_2011.csv')
-### Subset the dataset
+###Subset the dataset
 # df2011 <- subset(df, C_YEAR == "2011")
-### Export to cwd
 # write.csv(df2011, "NCDB_2011.csv")
 # rm(list=ls()) #removes all variables from the Global Environment 
 ```
 
-```{r echo=FALSE, Load_the_Data}
+```{r}
 # Load the Data
 filename <- "NCDB_2011.csv"
 df <- read.csv(filename)
+df2 <- df #Copy of the untouched dataframe for later comparison
 ```
 ###Number of records, variables 
 ```{r}
@@ -62,20 +113,21 @@ ncol(df)
 ```{r}
 names(df)
 ```
+[Data Dictionary (.doc)](http://data.tc.gc.ca/extracts/Data_Dictionary_NCDB_EN.doc)
+
 ###Structure of the data
 ```{r}
 str(df)
 ```
+
 ###Summary of the data
 ```{r}
-summary(df2)
+summary(df)
 ```
 There are three kinds of variables in this dataset: collision-level, vehicle-level, and person-level.
 
 ###COLLISIONS
-From an initial look a the summary output, Friday (5) appears to be the weekday with the most number of collisions reported. The 4-5 PM Hour (16) is the most dangerous time for motorists. Most collisions involve 2 vehicles (*C_VEHS*).
-Rear-end collisions (21) are the most common types of accidents (*C_CONF*) and most accidents happen at an intersection (02)
-(*C_RCFG*). Nothing out of the ordinary so far. 
+From an initial look a the summary output, Friday (5) appears to be the weekday with the most number of collisions reported. The 4-5 PM Hour (16) is the most dangerous time for motorists. Most collisions involve 2 vehicles (*C_VEHS*).Rear-end collisions (21) are the most common types of accidents (*C_CONF*) and most accidents happen at an intersection (02) (*C_RCFG*). Nothing out of the ordinary so far. 
 However, perhaps surprisingly most accidents actually occur on clear and sunny days by a wide margin (1) (*C_WTHR*) and on dry,
 normal (1) (*C_RSUR*) straight and level (1) 
 (*C_RALN*) road surfaces. Finally, most collisions occur where no traffic controls (such as stop signs, police officers, reduced speed zone, etc.) are present.
@@ -94,47 +146,154 @@ About 2/3rds of the reported collisions (each record) are from drivers (11) them
 snowmobilers, and ATV riders) was worn (02) (*P_SAFE*).
 This highlights the fact that there are different categories of people reporting these collisions, but the vast majority are vehicle drivers (1) and passengers (2) with pedestrians (3) a distant third (*P_USER*).  
 
-###Further data wrangling
+###Initial Age Plot
 ```{r}
-#Age should not be a factor
-df2 <- df #create a copy for later
-df$P_AGE <- as.numeric(df$P_AGE)
+qplot(x=P_AGE, data = df)
+```
+Looks like there is something unusual with this plot towards the right.
+```{r}
+#Let's see the frequency of each age
+ages <- as.data.frame(table(df$P_AGE))
+ages[ages$Var1 == "NN" | ages$Var1 == "UU",]
+summary(df$P_AGE)[1:10]
+```
+###Further data wrangling
+Looks like a lot of people did not report their age (UU) or was not applicable (NN) (e.g. “dummy" person record created for parked cars).
+We'll go ahead and remove these records from the dataset we are looking and also clean up the gender variable to show only males and females. 
+```{r}
+df <- subset(df, P_AGE != "UU" & P_AGE != "NN" & P_SEX != "N" & P_SEX != "U")
+nrow(df)
+summary(df)
+```
+We are now looking at 275,270 records instead of just over three hundred thousand from the original data. We got rid of under 10% of the records and it shouldn't affect our ultimate analysis.
+
+###Age
+```{r}
+ggplot(aes(x=P_AGE), data = df) + geom_bar()
+```
+This chart now shows the distribution of ALL people involved in collisions and we can see that it is bimodal with one peak for teenages and another what looks like around the 40s. Let's confirm that.
+
+```{r}
+df$P_AGE_NUM <- as.numeric(df$P_AGE)
+ggplot(aes(x=P_AGE), data = subset(df,P_AGE_NUM > 20)) + 
+  geom_bar(binwidth = 1)
+
+```
+From this chart (age > 20) it looks like it is about 45-50 where the second peak is.
+
+But we are really interested in Drivers only in terms of their age.
+
+###Driver's Age
+
+```{r}
+df$P_AGE_NUM <- as.numeric(df$P_AGE)
+#P_USER is the type of user who reports the collision, can be passenger, pedestrian, etc (Driver - includes motorcycle drivers/riders) 
+ggplot(aes(x=P_AGE), data = subset(df,P_USER == 1)) + #1 for Driver
+  geom_bar(binwidth = 1)
+```
+We do see a similar distribution when only considering Drivers. We do see now that the left end of the distribution is flat as we don't expect children to be driving (at least in Canada)!
+
+###Gender
+
+Does this age distribution vary between genders?
+```{r}
+ggplot(aes(x=P_AGE), data = subset(df, P_USER == 1)) + geom_bar() +
+  facet_wrap(~P_SEX)
+```
+Not quite, although the 1st peak is much higher for Male Drivers and the 2nd peak is more prominent in the Male Driver distribution, the overall shape of both distributions are very similar.
+
+###Gender of the Driver
+
+Are more men or women behind the wheel before an accident?
+
+```{r}
+#http://stackoverflow.com/questions/20600900/r-faceted-bar-chart-with-percentages-labels-independent-for-each-plot
+ggplot(aes(x=P_SEX),data = subset(df,P_USER == 1)) + geom_bar() + 
+  stat_bin(geom = "text", #show percentages on top of the bars
+           aes(label = paste(round((..count..)/sum(..count..)*100), "%")),
+           vjust = -1, color = "grey30", size = 5) +
+           coord_cartesian(ylim=c(0,125000)) #leave room for the bar labels by increasing max
+```
+[Contrary to this reddit joke](https://www.reddit.com/r/Jokes/comments/2zqnwx/fact_a_lot_of_women_turn_into_good_drivers/) (in bad taste), men may actually be involved in more collisions than women overall.
+
+###Deadly Crashes
+
+Is there a difference between the sexes when we look at deadly crashes only?
+
+```{r}
+#CSEV --> Severity of the the crash - Either at least one fatality(1) or non-fatal injuries(2) 
+ggplot(aes(x=P_SEX),data = subset(df,P_USER == 1 & C_SEV == 1)) + geom_bar() + #1 
+  stat_bin(geom = "text", #show percentages on top of the bars
+           aes(label = paste(round((..count..)/sum(..count..)*100), "%")),
+           vjust = -1, color = "grey30", size = 5) +
+           coord_cartesian(ylim=c(0,2250)) #leave room for the bar labels by increasing max
 ```
 
-max(table(df$P_AGE))
-qplot(x=P_AGE, data = df)
-ggplot(aes(x=P_AGE), data = df) + geom_bar()
-qplot(x=P_AGE, data = df, breaks = c(seq(0,99,1)))
-#outliers who are over 100 #could be typos or misreporting
-qplot(x=P_SEX, data = df)
-ggplot(aes(x=P_AGE), data = df) + geom_bar() +
-  facet_wrap(~P_SEX)
-#Looks like many unknowns have an Age of over 90+
-#We will disregard unknown rows 
-#Need to subset only M & F
+Yes, there are relatively few deaths (thank god!), but in 3 out of every 4 collisions that involve a death, a man was driving the vehicle.
 
-#What month is the most accidents in?
+###Time
 
-qplot(x=C_MNTH, data = df)
-#no clear trend
+Let's shift gears (no pun intended) and look at collisions in regards to time.
 
-#Makeup of this dataset -most are drivers
-qplot(x=P_USER, data = df)
-#Put in legend
-#Are most drivers male or females?
-qplot(x=P_SEX, data = subset(df, P_USER == 1)) #1 is Motor Vehicle Driver
-#Looks like men
+###What day of the week has the most accidents?
 
-#Breakdown of severity of accident
-qplot(x=P_ISEV, data = subset(df, P_USER == 1)) + #1 is Motor Vehicle Driver
-  theme(panel.background = element_rect(fill = 'white'))
+```{r}
+ggplot(aes(x=C_WDAY), data = subset(df,C_WDAY != "U")) + geom_bar()
+```
 
-qplot(x=P_ISEV, data = subset(df, P_USER == 2))  + #2 is Motor Vehicle Passenger
-  theme(panel.background = element_rect(fill = 'white'))
+Looks like Friday (5) has the most accidents (an increasing trend from Monday) and Sunday has the least amount of accidents (this could be attributed to the fact that very few people work on Sundays so there might be less vehicles commuting to work).
 
-#Most motorcyclists are injured in accidents in comparison to m
-qplot(x=P_ISEV, data = subset(df, P_USER == 5)) + #5 is Motorcyclists
-  theme(panel.background = element_rect(fill = 'white'))
+```{r}
+g1 <- ggplot(aes(x=C_WDAY), data = subset(df,C_WDAY != "U" & C_SEV == 1)) + geom_bar() + ggtitle("Deadly Collisions")
+g2 <- ggplot(aes(x=C_WDAY), data = subset(df,C_WDAY != "U" & C_SEV == 2)) + geom_bar() + ggtitle ("Non-Deadly Collsions")
+   #leave room for the bar labels by increasing max
+multiplot(g1, g2, cols=2)
+```
+
+Looks like deadly collisions happen the most on Saturdays as opposed to friday for non-deadly crashed.
+
+###What time of day do most collisions occur?
+
+```{r}
+ggplot(aes(x=C_HOUR), data = df) + geom_bar()
+```
+Not surprisingly, most collisions occur during 4:00-5:00 PM (many people are heading home after work during this hour).
+
+#How about if we look at time of day across the different days?
+```{r}
+ggplot(aes(x=C_HOUR), data = subset(df,C_WDAY != "U" & C_HOUR != "UU")) + geom_bar() +
+  facet_wrap(~C_WDAY)
+```
+Looks like the weekend, the distribution is almost identical in shape and the pake is much wider.
+
+###What month has the most accidents?
+
+```{r}
+ggplot(aes(x=C_MNTH), data = subset(df, C_MNTH != "UU")) + geom_bar()
+```
+Looks like January and the summer months have the most number of reported collisions (could be that more people are driving in the summer for the holidays).
+
+###Does this change when we only look at drivers?
+```{r}
+ggplot(aes(x=C_MNTH), data = subset(df, C_MNTH != "UU" & P_USER == 1)) + geom_bar()
+```
+Not really, the absolute counts are less, but the distribution is quite similar.
+
+#Types of People Reporting Collisions
+
+Speaking of drivers, we haven't yet discussed how much of this dataset consists of collision reports from drivers as opposed to passengers, pedestrians, etc.
+
+```{r}
+ggplot(aes(x=P_USER), data = subset(df, P_USER != "U")) + geom_bar() +
+  stat_bin(geom = "text", #show percentages on top of the bars
+           aes(label = paste(round((..count..)/sum(..count..)*100), "%")),
+           vjust = -1, color = "grey30", size = 4) +
+           coord_cartesian(ylim=c(0,200000)) #leave room for the bar labels by increasing max
+
+```
+The vast majority of this dataset comes from reports from drivers (1) and passengers(2).
+
+
 
 #How's the weather like on when there are accidents?
 #On sunny days, perhaps its just because more motorcyclists avoid bad weather.
