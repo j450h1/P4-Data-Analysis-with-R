@@ -1,5 +1,7 @@
+Analysis of Vehicle Collisions in Canada 
 ========================================================
-Analysis of Vehicle Collisions in Canada by Jas Sohi
+### Jas Sohi 
+#### March 29, 2015
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
 # Load all of the packages that you end up using
@@ -7,12 +9,15 @@ Analysis of Vehicle Collisions in Canada by Jas Sohi
 # Notice that the parameter "echo" was set to FALSE for this code chunk.
 # This prevents the code from displaying in the knitted HTML output.
 # You should set echo=FALSE for all code chunks in your file.
+
+###Set global options for all subsequent r code chunks 
 library(knitr)
 opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+
 library(ggplot2)
 library(plyr)
 
-#Global Option to have a black and white theme for all plots
+#Global option to have a black and white theme for all plots
 ggplot <- function(...) { ggplot2::ggplot(...) + theme_bw() }
 
 #http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)
@@ -64,25 +69,24 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
-
 ```
 
-ABOUT THE DATASET
+### About the Dataset
 
-[National Collision Database (NCDB) - a database containing all police-reported motor vehicle collisions on public roads in Canada. Selected variables (data elements) relating to fatal and injury collisions for the collisions from 1999 to the most recent available data.](http://open.canada.ca/data/en/dataset/1eb9eba7-71d1-4b30-9fb1-30cbdab7e63a)
+[National Collision Database (NCDB) - a database containing all police-reported motor vehicle collisions on public roads in Canada. Selected variables (data elements) relating to fatal and injury collisions for the collisions from 1999 to the most recent available data (2011).](http://open.canada.ca/data/en/dataset/1eb9eba7-71d1-4b30-9fb1-30cbdab7e63a)
 
-###Goal
+### Goal
 
-The underlying question I will explore in this analysis is what features are common in drivers for accidents that result in fatalities?
+###*The underlying question I will explore in this analysis is what features (related to drivers, their vehicles, and the collision itself) are common in accidents that result in fatalities?*
 
-###Data Wrangling
+### Data Wrangling
 
-I chose to subset this data and only look at the most recent year (2011) due to the enormous size of this dataset with over a million records. This subsetted dataset contains just over 300,000 records.
+I chose to subset this data and only look at the most recent year (2011) due to the enormous size of the original dataset with over a million records. This new raw dataset contains just over 300,000 records.
 
 Each record represents one collision report per person involved in a collision in Canada. So if there were 4 people involved in a collision there would be 4 separate records. 
 
 ```{r}
-###DATA PREPARATION
+###DATA PREPARATION - This was done only once to subset the original da
 ###Set the working directory
 # getwd()
 # directory <- "C:/Users/user/version-control/Project-3-Data-Analysis-with-R"
@@ -101,12 +105,12 @@ filename <- "NCDB_2011.csv"
 df <- read.csv(filename)
 df2 <- df #Copy of the untouched dataframe for later comparison
 ```
-###Number of records, variables 
+### Number of records, variables 
 ```{r}
 nrow(df) 
 ncol(df)
 ```
-###Variable names
+### Variable names
 ```{r}
 names(df)
 ```
@@ -116,34 +120,35 @@ names(df)
 
 ### What is the structure of your dataset?
 
-###Structure of the data
+### Structure of the data
 ```{r}
 str(df)
 ```
 
-###Summary of the data
+### Summary of the data
 ```{r}
 summary(df)
 ```
 There are three kinds of variables in this dataset: collision-level, vehicle-level, and person-level.
 
-###COLLISIONS
-From an initial look a the summary output, Friday (5) appears to be the weekday with the most number of collisions reported. The 4-5 PM Hour (16) is the most dangerous time for motorists. Most collisions involve 2 vehicles (*C_VEHS*).Rear-end collisions (21) are the most common types of accidents (*C_CONF*) and most accidents happen at an intersection (02) (*C_RCFG*). Nothing out of the ordinary so far. 
-However, perhaps surprisingly most accidents actually occur on clear and sunny days by a wide margin (1) (*C_WTHR*) and on dry,
+### COLLISIONS
+From an initial look a the summary output, Friday (5) appears to be the weekday with the most number of collisions reported. The 4-5 PM Hour (16) is the most dangerous time for motorists. Most collisions involve 2 vehicles (*C_VEHS*). Rear-end collisions (21) are the most common types of accidents (*C_CONF*) and most accidents happen at an intersection (02) (*C_RCFG*). Nothing out of the ordinary so far. 
+However, perhaps surprisingly, most accidents actually occur on clear and sunny days by a wide margin (1) (*C_WTHR*) and on dry,
 normal (1) (*C_RSUR*) straight and level (1) 
 (*C_RALN*) road surfaces. Finally, most collisions occur where no traffic controls (such as stop signs, police officers, reduced speed zone, etc.) are present.
 
-###VEHICLES
+### VEHICLES
 
 Most collisions involved light duty vehicles such as passenger cars, vans, and light duty pickup trucks (01) (*V_TYPE*).
-Most collisions involve more recent model vehicles, but there doesn't seem to be a large variance between years (*V_YEAR*). 
+Most collisions involve more recent model vehicles, but there isn't a large variance between years (*V_YEAR*). 
 
-###PEOPLE
+### PEOPLE
 
-Men are involved in more collisions than women. Many people don't seem to report their age (UU = Unknown) (*P_AGE*), but from the ones that do, most consist of young adults and teenagers (17-21 years old).
-
-About 2/3rds of the reported collisions (each record) are from drivers (11) themselves instead of passengers (*P_PSN*). Only
-```r round((nrow(subset(df,P_ISEV == 3))/nrow(df))*100,digits=2) ``` % of reported collisions involved a fatality (3), while the rest of the collisions were split mostly between injuries/no injuries (*P_ISEV*). In the vast majority of incidents, a safety device such as a seat belt or helmet (for motorcycles, bicyclists,
+```{r echo = FALSE}
+#Divide the number of deadly collisions by the number of total collisions
+percent_deadly <- round((nrow(subset(df,P_ISEV == 3))/nrow(df))*100,digits=2)
+```
+Men are involved in more collisions than women. Many people don't report their age (UU = Unknown) (*P_AGE*), but from the ones that do, most consist of young adults and teenagers (17-21 years old).About 2/3rds of the reported collisions (each record) are from drivers (11) themselves instead of passengers (*P_PSN*). Only ```r percent_deadly``` % of reported collisions involved a fatality (3), while the rest of the collisions were split mostly between injuries/no injuries (*P_ISEV*). In the vast majority of incidents, a safety device such as a seat belt or helmet (for motorcycles, bicyclists,
 snowmobilers, and ATV riders) was worn (02) (*P_SAFE*).
 This highlights the fact that there are different categories of people reporting these collisions, but the vast majority are vehicle drivers (1) and passengers (2) with pedestrians (3) a distant third (*P_USER*).  
 
@@ -153,39 +158,36 @@ This highlights the fact that there are different categories of people reporting
 ```{r}
 qplot(x=P_AGE, data = df)
 ```
-Looks like there is something unusual with this plot towards the right.
+Looks like there is something unusual with this plot towards the right tail.
 ```{r}
 #Let's see the frequency of each age
 ages <- as.data.frame(table(df$P_AGE))
 ages[ages$Var1 == "NN" | ages$Var1 == "UU",]
 summary(df$P_AGE)[1:10]
 ```
-###Further data wrangling
+### Further data wrangling
 Looks like a lot of people did not report their age (UU) or was not applicable (NN) (e.g. “dummy" person record created for parked cars).
 We'll go ahead and remove these records from the dataset we are looking and also clean up the gender variable to show only males and females. 
 ```{r}
 df <- subset(df, P_AGE != "UU" & P_AGE != "NN" & P_SEX != "N" & P_SEX != "U")
-nrow(df)
-summary(df)
+#summary(df)
+#275,270 records now
 ```
-We are now looking at 275,270 records instead of just over three hundred thousand from the original data. We got rid of under 10% of the records and it shouldn't affect our ultimate analysis.
+We are now looking at `r nrow(df)` records instead of just over three hundred thousand from the original data. We got rid of under 10% of the records and it shouldn't affect our ultimate analysis.
 
-###Age
+### Second Age Plot
 ```{r}
 ggplot(aes(x=P_AGE), data = df) + geom_bar()
 ```
-This chart now shows the distribution of ALL people involved in collisions and we can see that it is bimodal with one peak for teenages and another what looks like around the 40s. Let's confirm that.
+This chart now shows the distribution of ALL people involved in collisions and we can see that it is bimodal with one peak near later teenagers/young adults and another what looks like people in their 40s. Let's confirm that.
 
 ```{r}
 #Needed to subset df & for later boxplot.
 df$P_AGE_NUM <- as.numeric(df$P_AGE)
 ggplot(aes(x=P_AGE), data = subset(df,P_AGE_NUM > 15)) + 
   geom_bar(binwidth = 1)
-
 ```
-From this chart (age > 15) it looks like it is about 45-50 where the second peak is.
-
-But we are really interested in Drivers only in terms of their age.
+From this chart (age > 15), we can see more precisel that 45-50 is where the second peak is. But, as per the original goal of this analysis, we are really interested in the age of *Drivers* only.
 
 ###Driver's Age
 
@@ -195,17 +197,17 @@ But we are really interested in Drivers only in terms of their age.
 ggplot(aes(x=P_AGE), data = subset(df,P_USER == 1)) + #1 for Driver
   geom_bar(binwidth = 1)
 ```
-We do see a similar distribution when only considering Drivers. We do see now that the left end of the distribution is flat as we don't expect children to be driving (at least in Canada)!
+We do see a similar distribution when only considering Drivers only. We do see now that the left tail of the distribution is flat as we don't expect children to be driving (at least in Canada)!
 
-###Gender
+### Gender
 
-Does this age distribution vary between genders?
+Does this age distribution vary across genders?
 ```{r}
 ggplot(aes(x=P_AGE), data = subset(df, P_USER == 1)) + geom_bar() +
   facet_wrap(~P_SEX)
 qplot(x = P_SEX, y = P_AGE_NUM, data = df, geom = "boxplot")
 ```
-Not quite, the overall both distributions are very similar.
+Not quite, the shape of both age distributions is very similar across sexes.
 
 ###Gender of the Driver
 
@@ -219,11 +221,11 @@ ggplot(aes(x=P_SEX),data = subset(df,P_USER == 1)) + geom_bar() +
            vjust = -1, color = "grey30", size = 5) +
            coord_cartesian(ylim=c(0,125000)) #leave room for the percent labels
 ```
-[Contrary to this reddit joke](https://www.reddit.com/r/Jokes/comments/2zqnwx/fact_a_lot_of_women_turn_into_good_drivers/) (in bad taste), men may actually be involved in more collisions than women overall.
+[Contrary to this reddit joke](https://www.reddit.com/r/Jokes/comments/2zqnwx/fact_a_lot_of_women_turn_into_good_drivers/), in bad taste I may add, men are actually involved in more collisions than women overall.
 
-###Deadly Crashes
+### Deadly Crashes
 
-Is there a difference between the sexes when we look at deadly crashes only?
+Is this difference between the sexes still present when we look at deadly crashes only?
 
 ```{r}
 #C_SEV Severity of the crash - At least one fatality(1) or non-fatal injuries(2) 
@@ -234,70 +236,69 @@ ggplot(aes(x=P_SEX),data = subset(df,P_USER == 1 & C_SEV == 1)) + geom_bar() +
            coord_cartesian(ylim=c(0,2250)) #leave room for the percent labels
 ```
 
-Yes, there are relatively few deaths (thank god!), but in 3 out of every 4 collisions that involve a death, a man was driving the vehicle.
+Yes, and the contrast is much more pronounced. There are relatively a few deaths per year (thank god!), but in 3 out of every 4 collisions that do involve a death, a man was driving the vehicle.
 
-###Time
+### Time
 
 Let's shift gears (no pun intended) and look at collisions in regards to time.
 
-###What day of the week has the most accidents?
+### What day of the week has the most accidents?
 
 ```{r}
 ggplot(aes(x=C_WDAY), data = subset(df,C_WDAY != "U")) + geom_bar()
 ```
 
-Looks like Friday (5) has the most accidents (an increasing trend from Monday - perhaps people are in a rush to celebrate the weekend!) and Sunday has the least amount of accidents (this could be attributed to the fact that very few people work on Sundays so there might be less vehicles commuting to work).
+Looks like Friday (5) has the most accidents (an increasing trend from Monday - perhaps people are in a rush to celebrate the weekend!) and Sunday has the least amount of accidents (this could be attributed to the fact that very few people work on Sundays so there might be less vehicles commuting to work overall).
 
 ```{r}
 g1 <- ggplot(aes(x=C_WDAY), data = subset(df,C_WDAY != "U" & C_SEV == 1)) + 
   geom_bar() + ggtitle("Deadly Collisions")
 g2 <- ggplot(aes(x=C_WDAY), data = subset(df,C_WDAY != "U" & C_SEV == 2)) + 
   geom_bar() + ggtitle ("Non-Deadly Collsions")
-   #leave room for the bar labels by increasing max
 multiplot(g1, g2, cols=2)
 ```
 
-Looks like deadly collisions happen the most on Saturdays as opposed to friday for non-deadly crashes. This shoud be a variable that could help predict deadly crashes.
+Looks like deadly collisions happen the most on Saturdays (6) as opposed to Fridays (5) for non-deadly crashes. 
 
-###What time of day do most collisions occur?
+### What time of day do most collisions occur?
 
 ```{r}
 ggplot(aes(x=C_HOUR), data = df) + geom_bar()
 ```
-Not surprisingly, most collisions occur during 4:00-5:00 PM (many people are heading home after work during this hour).
+
+Not surprisingly, most collisions occur during 4:00-5:00 PM (not surprisingly many people are heading home after work during this hour).
 
 ```{r}
 g1 <- ggplot(aes(x=C_HOUR), data = subset(df,C_SEV == 1)) + geom_bar() + 
   ggtitle("Deadly Collisions")
 g2 <- ggplot(aes(x=C_HOUR), data = subset(df,C_SEV == 2)) + geom_bar() + 
   ggtitle ("Non-Deadly Collsions")
-   #leave room for the bar labels by increasing max
 multiplot(g1, g2, cols=2)
 ```
 
-#How about if we look at time of day across the different days?
+### How about if we look at time of day across the different days?
 ```{r}
 ggplot(aes(x=C_HOUR), data = subset(df,C_WDAY != "U" & C_HOUR != "UU")) + 
   geom_bar() +
   facet_wrap(~C_WDAY)
 ```
-Looks like the weekend, the distribution is almost identical in shape and the peak is much wider.
+Looks like distribution across the weekdays is bimodal throughout the non-sleeping hours (Midnight to 7 AM   ), while the distribution on the weekend is almost identical for saturday and sunday in shape being nearly unimodal for the non-sleeping hours.
 
-###What month has the most accidents?
+### What month has the most accidents?
 
 ```{r}
 ggplot(aes(x=C_MNTH), data = subset(df, C_MNTH != "UU")) + geom_bar()
 ```
 Looks like January and the summer months have the most number of reported collisions (could be that more people are driving in the summer for the holidays).
 
-###Does this change when we only look at drivers?
+### Does this change when we only look at drivers?
 ```{r}
 ggplot(aes(x=C_MNTH), data = subset(df, C_MNTH != "UU" & P_USER == 1)) + 
   geom_bar()
 ```
 Not really, the absolute counts are less, but the distribution is quite similar.
 
-#Types of People Reporting Collisions
+### Types of People Reporting Collisions
 
 Speaking of drivers, we haven't yet discussed how much of this dataset consists of collision reports from drivers as opposed to passengers, pedestrians, etc.
 
@@ -307,17 +308,16 @@ ggplot(aes(x=P_USER), data = subset(df, P_USER != "U")) + geom_bar() +
            aes(label = paste(round((..count..)/sum(..count..)*100), "%")),
            vjust = -1, color = "grey30", size = 4) +
            coord_cartesian(ylim=c(0,200000)) #leave room for the percente labels
-
 ```
-The vast majority of this dataset comes from reports from drivers (1) and passengers(2).
+The vast majority of this dataset comes from reports from drivers (1) and passengers (2).
 
-#How's the weather like on when there are accidents?
+### How's the weather like on when there are accidents?
 ```{r}
 ggplot(aes(x=C_WTHR), data = df) + geom_bar()
 ```
-Perhaps counterintuitievely most of the accidents occur on sunny days. At first, you might think that more accidents occur in bad weather.
+Perhaps counterintuitively, most accidents occur on sunny days. At first, you might have thought that more accidents occur in bad weather.
 
-#Let's compare the weather for motorcyclists vs drivers
+### Let's compare the weather for motorcyclists vs drivers
 ```{r}
 g1 <- ggplot(aes(x=C_WTHR), data = subset(df, P_USER == 5)) + #5 - Motorcyclists
   geom_bar()
@@ -326,15 +326,15 @@ g2 <- ggplot(aes(x=C_WTHR), data = subset(df, P_USER == 1)) + #1 - Drivers
   geom_bar()
 multiplot(g1, g2, cols=2)  
 ```
-A larger proportion of the accidents that motorcyclists are involved in occur on sunny days (this could be due to the fact that a lot of motorcyclists ride only in the spring and summer months with better weather conditions) than compared with motor vehicle drivers.
+A larger proportion of the accidents that motorcyclists (left plot) are involved in occur on sunny days (1) than compared with motor vehicle drivers (right plot). (this could be due to the fact that a lot of motorcyclists ride only in the spring and summer months with better weather conditions) 
 
-###Number of vehicles involved in a collision
+### Number of vehicles involved in a collision
 ```{r}
 qplot(x=C_VEHS, data = subset(df, P_USER == 1)) 
 ```
 Most collisions involve, not surprisingly, 2 vehicles.
 
-###Vehicle Age
+### Vehicle Age
 ```{r}
 qplot(x=V_YEAR, data = subset(df, P_USER == 1)) 
 ```
@@ -368,7 +368,6 @@ multiplot(g1,g2, ncol = 2)
 ```{r}
 qplot( geom = "boxplot", x= factor(C_SEV), y = V_YEAR_NUM, data = df)
 ```
-table(df$V_YEAR_NUM)
 
 Doesn't seem to be any clear trend other than most vehicles involved in accidents are from most recent models (it could simply be there are more newer vehicles on the road). Looks like a dead end here (pun intended!).
 
@@ -391,32 +390,32 @@ g2 <- ggplot(aes(x=V_TYPE), data = subset(df,P_USER == 1 & C_SEV == 2)) +
   ggtitle("Non-Deadly Collisions")
 multiplot(g1,g2, ncol = 2)
 ```
-Now that we look at drivers only, we see that a larger proportion of Trucks (07) & Road Tractors (08) are involved in deadly crashes. This may be one variable to help predict deadly crashes.
+Now remember we are now looking at drivers only; we see that a larger proportion of Trucks (07) & Road Tractors (08) are involved in deadly crashes. This may be one variable to help predict deadly crashes.
 
 #Univariate Analysis (continued)
 
 ### What is/are the main feature(s) of interest in your dataset?
 
-The main features of interest in the data set are *IS_SEV* (the severity of collisions - injury, no injury, or fatality) and *P_AGE* (the age of person involved in collision). I suspect age and some other combination of variables can be helpful in determining what are common variables in deadly collisions.
+The main features of interest in the data set are *IS_SEV* (the severity of collisions - injury, no injury, or fatality) and *P_AGE* (the age of person involved in collision). I suspected that driver's age and some other combination of variables could help predict deadly collisions.
 
 ### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
 
-In addition to the age of the driver, I originally thought that vehicle age (*V_YEAR)*, vehicle type (*V_TYPE*), and gender (*P_SEX*) would be predictive of fatality in collisions. The plots support this initial hunch except for vehicle age which doesn't seem to vary between deadly and non-deadly collisions.
+In addition to the age of the driver, I originally thought that vehicle age (*V_YEAR)*, vehicle type (*V_TYPE*), and gender (*P_SEX*) would be a larger factor in determining the fatality in collisions. The plots support this initial hunch except for vehicle age which doesn't seem to vary between deadly and non-deadly collisions. I will look further at age in the bivariate analysis to see if their is a difference between deadly and non-deadly collisions.
 
 ### Did you create any new variables from existing variables in the dataset?
 
-Yes, I did create new variables just so that the data could be subset since the original variables were factors (categorical) and could not be subsetted otherwise (P_AGE_NUM & V_YEAR_NUM).
+Yes, I did create new variables just so that the data could be subset since the original variables were factors (categorical) and could not be subsetted otherwise (P_AGE_NUM & V_YEAR_NUM). I didn't want to directly convert the original columns in case I needed the factor variables at a later time.
 
 ### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
 
-Yes, I did adjust the form of the data to show only the most recent year of data as there were millions of total records, but I was able to subset it to 2011 and bring it down to 300,000 records and then I removed data that had unknown or missing gender values as I suspected that the sex of the driver in fatal collisions could be skewed towards one sex.
+Yes, I did adjust the form of the data to show only the most recent year of data as there were millions of total records, but I was able to subset it to 2011 and bring it down to 300,000 records and then I removed data that had unknown or missing gender values as I suspected that the sex of the driver in fatal collisions could be skewed towards one sex (as confirmed by a histogram plot).
 
 # Bivariate Plots Section
-```{r echo=FALSE, Bivariate_Plots}
+```{r}
 #http://stackoverflow.com/questions/3571909/r-how-to-calculate-correlation-cor-for-only-a-subset-of-columns
 # Make the correlation table
-remove <- names(df) %in% c("C_YEAR") 
-#We are not selecting the year as it produces NA values
+remove <- names(df) %in% c("C_YEAR") #We are not selecting the year when producing this correlation table as it produces NA values
+
 rdf <- df[!remove]
 ctab <- cor(rdf[sapply(rdf, is.numeric)])
 round(ctab, 2)
@@ -456,7 +455,7 @@ df <- subset(df, P_ISEV != "U" & P_ISEV != "N" & P_ISEV != "X")
 df$DM <- ifelse(df$P_ISEV == 3, 1, 0) 
 table(df$DM)
 ```
-*1* means that that record for that person was deceased immediately after the collision or went to the hospital and died as a result of his/her injuries. 
+*1* means that that record for that person was deceased immediately after the collision or went to the hospital and died as a result of his/her injuries. *0* is the person survived.
 
 That removed about 10,000 records. We will make sure to make this same transformation to the test data we will test our model on. We will now subset the data to only drivers.
 
@@ -468,22 +467,106 @@ nrow(df)
 ```
 Now we have reduced the records by just under 100,000 but we are looking at only the drivers and we are ready to apply our model. Just before we do let's have another look at the correlation matrix now.
 
-```{r echo=FALSE, Bivariate_Plots}
+```{r}
 ctab <- cor(df[sapply(df, is.numeric)])
 round(ctab, 2)
 ```
-Definately, doesn't seem to be any linear relationsips here. We will probably end up using a different machine learning algorithm.
+Definately, doesn't seem to be any linear relationsips here.
 
 Let's go back to draw some bivariate plots.
 
+#Bivariate Plots
 ```{r}
 #https://tgmstat.wordpress.com/2013/11/13/plot-matrix-with-the-r-package-ggally/
 library(GGally)
-ggpairs(data=df, # data.frame with variables,
-        columns = 
-        title="pairwise plots", # title of the plot
-        colour = "P_SEX") # aesthetics, ggplot2 style
+#P_PSN,P_USER don't need to be looked at as they both indicate drivers only
+remove_columns <- names(df) %in% 
+  c("X","C_YEAR","C_MNTH", "C_HOUR", "V_ID","V_YEAR","P_ID", "P_AGE", "P_ISEV",
+    "C_SEV", "P_USER", "C_WTHR", "C_VEHS", "C_CONF", "C_RCFG","C_TRAF","P_SAFE",
+    "P_PSN", "C_WDAY") 
+sampledf <- df[!remove_columns]
+#Rename the variables for better visibility on the plot
+names(sampledf) <- c("RS","RL","VT","SEX","AGE","VY","M","D","H","VN","WT","DM")
+library(GGally)
+ggpairs(data=sampledf[1:10000, c(3:12)], # data.frame with variables,
+        title="pairwise plots") # title of the plot
 ```
+
+
+###Drivers in Newer Vehicles or Older Vehicles?
+```{r}
+ggplot(aes(x=factor(DM), y=V_YEAR_NUM), data=subset(df,V_YEAR != "UUUU" & 
+      V_YEAR != "NNNN")) + geom_boxplot()
+```
+Looks like newer cars are involved in most accidents whether deadly(1) or not (0).
+
+### Vehicle Types
+
+Let's look at the age distribution of drivers of different types of vehicles.
+```{r}
+ggplot(aes(x=V_TYPE,y=P_AGE_NUM), data = df) + 
+  geom_boxplot() +
+  scale_x_discrete(labels=c("CAR","VAN","SMALL TRUCK","TRUCK","TRACTOR","SCHOOL BUS", "SMALL SCHOOL BUS", "CITY BUS", "RV", "FIRETRUCK","STREET CAR")) 
+```
+
+Nothing out of the ordinary, we can see that school bus drivers and RV drivers skew towards older drivers.
+
+```{r}
+qplot(x=C_TRAF, geom="bar", fill=factor(DM), data = df)
+```
+
+Initially it looks like most deaths occur where no safety controls are present (18)
+
+```{r}
+ggplot(df, aes(x = C_TRAF, fill = factor(DM))) + geom_bar(position = "fill")
+```
+
+But looking at the proportions, it looks as though the largest proportion of deaths actually occur where warning signs (5) are present.
+
+###Age of Deadly Drivers
+```{r}
+library(vcd)
+#http://cran.us.r-project.org/web/packages/vcdExtra/vignettes/vcd-tutorial.pdf
+cdplot(factor(DM) ~ P_AGE, data = df)
+#with(Arthritis, rug(jitter(Age), col="white", quiet=TRUE))
+```
+This cumulative density plot shows teenage drivers and elderly drivers are overrepresented in collision deaths.
+
+###Underage Drivers
+```{r}
+#http://en.wikipedia.org/wiki/Driver%27s_licence_in_Canada
+underage <- nrow(df[df$P_AGE_NUM < 14,])
+underage_deaths <- df[df$P_AGE_NUM < 14 & df$DM == 1,]
+```
+Why are there some young drivers? The lowest legal age for obtaining anytype of driver's license anywhere in Canada is 14 (Alberta). Looks like there are `r underage` cases of underage drivers in 2011 and only `r nrow(underage_deaths)` driver, aged `r underage_deaths$P_AGE`, resulted in a deadly collision (see chart below). 
+
+```{r}
+ggplot(aes(x=P_AGE, fill= factor(DM)), data = df) + geom_bar(position = "fill")
+```
+
+
+```{r}
+# mosaic(df, gp = shading_max, split_vertical = TRUE, main="Arthritis: [P_USER] [P_SEX]")
+# mosaic(~ C_WDAY + DM + C_HOUR, data=df,
+# expected=~C_WDAY:C_HOUR + C_WDAY:DM + C_HOUR:DM,
+# legend=FALSE, gp=shading_Friendly)
+
+```
+
+Maybe the configuration of the crash has an effect on how deadly a crash is?
+
+```{r}
+ggplot(aes(x=C_CONF, fill= factor(DM)), data = df) + geom_bar(position = "fill")
+```
+
+Head on collisions (31)  make up a huge proportion of deadly crashes. 
+
+```{r}
+ggplot(aes(x=C_RCFG, fill= factor(DM)), data = df) + geom_bar(position = "fill")
+```
+
+Railroad crossings (4) and passing lanes (7)  are the type of road configurations
+with the most deadly crashes.
 
 # Bivariate Analysis
 
@@ -491,15 +574,28 @@ ggpairs(data=df, # data.frame with variables,
 
 ### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
 
-### What was the strongest relationship you found?
 
+### What was the strongest relationship you found?
 
 
 
 # Multivariate Plots Section
 
 ```{r echo=FALSE, Multivariate_Plots}
+# qplot(x=P_AGE, y=V_YEAR, data=subset(df,V_YEAR != "UUUU" & V_YEAR != "NNNN"), color = P_SEX)
+```
 
+```{r}
+# qplot(x=P_AGE, y=V_YEAR, data=subset(df,V_YEAR != "UUUU" & V_YEAR != "NNNN"), color = factor(DM))
+```
+
+```{r}
+# totalDeaths <- nrow(df[df$DM == 1,])
+# total <- nrow(df)
+# totalDeaths/total
+# Deaths <- df[df$DM == 1,]
+```
+#ggplot((x=age))
 ```
 
 # Multivariate Analysis
@@ -512,14 +608,39 @@ ggpairs(data=df, # data.frame with variables,
 
 ------
 
-#Used the entire data to create a model, since if you want a better model you add more data to the training model.
-
 
 # Final Plots and Summary
 
 ### Plot One
-```{r echo=FALSE, Plot_One}
+```{r echo = FALSE, eval=FALSE}
+# To help see what limits to set on next plot
+boxplot(df$P_AGE_NUM) 
+summary(df$P_AGE_NUM)
+```
 
+```{r out.width='1000px', dpi=200}
+#http://stackoverflow.com/questions/23709060/change-r-markdown-plot-width
+
+#how may deaths for the most deadly age (19) and the second peak
+age_most <- 19
+age_old <- 46 #2nd peak
+age_initial <- 14 #lowest age on the bar chart
+most_deaths <- length(which(df$P_AGE_NUM == age_most))
+older_deaths <- length(which(df$P_AGE_NUM == age_old))
+#I will choose 14 as the minimum since that is the lowest legal age
+ggplot(aes(x=P_AGE), data = subset(df,P_AGE_NUM >= age_initial & P_AGE_NUM <= 90)) + 
+  geom_bar(binwidth = 1, colour = "darkgreen", fill = "white") +
+  ggtitle("Histogram of Driver's Age (All Collisions)") + 
+  xlab("Driver's Age") + 
+  ylab("Count of Drivers") +
+  #http://stackoverflow.com/questions/11019692/place-annotation-at-the-top-of-a-series-of-histograms-in-ggplot2-using-a-for-loo
+  annotate("text", label = as.character(most_deaths), x= age_most - age_initial, 
+    hjust = 0, y = most_deaths + 100, color = "black") + #Show the exact number
+  annotate("text", label = as.character(older_deaths), x= age_old - age_initial, 
+    hjust = 0, y = older_deaths + 100, color = "black") + #Show the exact number
+   #added 100 to the y-axis so there would be no overlap between text and plot
+#http://stackoverflow.com/questions/1330989/rotating-and-spacing-axis-labels-in-ggplot2
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
 ```
 
 ### Description One
