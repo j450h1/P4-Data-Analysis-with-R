@@ -542,7 +542,7 @@ Definitely, there doesn't seem to be any linear relationships here. Except for a
 qplot(C_RSUR_NUM,C_WTHR_NUM, data = df, geom="jitter",  malpha = 0.5)
 ```
 
-No clear relationship. Looks like there are quite a few accidents when the weather is really bad and when the road surface is at its worst (top right hand corner).
+No clear relationship here. Looks like there are quite a few accidents when the weather is really bad and when the road surface is at its worst (top right hand corner).
 
 Let's see if we can get any inspiration to compare other bivariate relationships with a pairwise plot of some selected variables.
 
