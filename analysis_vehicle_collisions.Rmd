@@ -412,7 +412,7 @@ g1 <- ggplot(aes(x=V_YEAR), data = subset(df, P_USER == 1 & C_SEV == 1)) +
 g2 <- ggplot(aes(x=V_YEAR), data = subset(df, P_USER == 1 & C_SEV == 2)) +
   geom_bar() +
   ggtitle("Non-Deadly Collisions")
-multiplot(g1,g2, ncol = 2)
+multiplot(g1,g2, cols = 2)
 ```
 
 Let's cleanup the plot a bit and only look at vehicles manufactured after 1980.
@@ -428,7 +428,7 @@ g2 <- ggplot(aes(x=V_YEAR), data = subset(df, P_USER == 1 & C_SEV == 2 &
   V_YEAR_NUM >= 1980 & V_YEAR != "NNNN" & V_YEAR != "UUUU")) +
   geom_bar() +
   ggtitle("Non-Deadly Collisions")
-multiplot(g1,g2, ncol = 2)
+multiplot(g1,g2, cols = 2)
 ```
 
 ```{r}
@@ -454,7 +454,7 @@ g1 <- ggplot(aes(x=V_TYPE), data = subset(df,P_USER == 1 & C_SEV == 1)) +
 g2 <- ggplot(aes(x=V_TYPE), data = subset(df,P_USER == 1 & C_SEV == 2)) +
   geom_bar() +
   ggtitle("Non-Deadly Collisions")
-multiplot(g1,g2, ncol = 2)
+multiplot(g1,g2, cols = 2)
 ```
 
 Now remember we are now looking at drivers only; we see that a larger proportion of Trucks (07) & Road Tractors (08) are involved in deadly crashes. This may be one variable to help predict deadly crashes.
@@ -542,7 +542,7 @@ Definitely, there doesn't seem to be any linear relationships here. Except for a
 qplot(C_RSUR_NUM,C_WTHR_NUM, data = df, geom="jitter",  malpha = 0.5)
 ```
 
-No clear relationship here. Looks like there are quite a few accidents when the weather is really bad and when the road surface is at its worst (top right hand corner).
+No clear relationship. Looks like there are quite a few accidents when the weather is really bad and when the road surface is at its worst (top right hand corner).
 
 Let's see if we can get any inspiration to compare other bivariate relationships with a pairwise plot of some selected variables.
 
@@ -770,9 +770,7 @@ g2 <- ggplot(aes(x=P_AGE), data = subset(df,P_AGE_NUM >= age_initial &
   #http://sape.inf.usi.ch/quick-reference/ggplot2/colour - color names
   scale_fill_manual(values=c("pink", "lightblue")) +
   theme(legend.title=element_blank(), legend.position = "top", 
-    plot.title = element_text(lineheight=.8, face="bold")) +
-  annotate("text", label = "*", x=5.5 , hjust=0, y=deadly_count - 5, color= "black",
-    size=20)#show an asterisk
+    plot.title = element_text(lineheight=.8, face="bold")) 
 ```
 
 ```{r, out.width='1000px', dpi=200}
@@ -783,7 +781,7 @@ g1
 g2
 ```
 
-#### From the top plot we can see that the distribution of driver's age is bimodal (1st peak at age 19 and 2nd peak at age 46). 19 year olds are indeed involved in the most accidents overall, but 18 year olds (*) are the ones involved in most deadly collisions (lower plot). We can also see that men and women are about equal in terms of being involved in accidents. However, when we look only at deadly collisions only (lower plot) we see that men are overrepresented. 
+#### From the top plot we can see that the distribution of driver's age is bimodal (1st peak at age 19 and 2nd peak at age 46). 19 year olds are indeed involved in the most accidents overall, but 18 year olds are the ones involved in most deadly collisions (lower plot). We can also see that men and women are about equal in terms of being involved in accidents. However, when we look only at deadly collisions only (lower plot) we see that men are overrepresented. 
 
 
 ### Plot Two
@@ -875,7 +873,7 @@ collision_types <- collision_types[1:18] #subset out UU & QQ
 collision_types[which(collision_types == "31")] <- "31 - Head-on collision"
 ggplot(aes(x=V_TYPE, y=C_CONF, color = factor(M,labels=c("Non-Deadly",
     "Deadly"))), data=subset(df,C_CONF != "UU" & C_CONF != "QQ")) + 
-    geom_point(position="jitter") +
+    geom_point(position="jitter") + 
     ggtitle("Vehicle Type vs Collision Type") + 
     xlab("Vehicle Type\n(V_TYPE)") + 
     ylab("Collision Type\n(C_CONF)") +
@@ -884,9 +882,49 @@ ggplot(aes(x=V_TYPE, y=C_CONF, color = factor(M,labels=c("Non-Deadly",
       face="bold")) +
     scale_x_discrete(labels = vehicle_types) + #vehicle types created earlier
     labs(color="Collision Severity") #rename legend
+
+#Redo Plot 3 - Easier to show this using a facetted bar plot
+#Plot Car separately - tried plotting all on log scale together, but easier to see contrast if its separate
+g1 <-ggplot(aes(x=C_CONF, fill = factor(M,labels=c("Non-Deadly",
+    "Deadly"))), data=subset(df,C_CONF != "UU" & C_CONF!= "QQ")) + #only look at a few vehicle types
+    geom_histogram() +
+    scale_fill_manual(values=c("black", "red"), #change the colors - red is Death :(
+                      name = "Collision Severity (M)") + #change legend title
+    ggtitle("Total Accidents by Collision Types for Cars") + 
+    xlab("Collision Type\n(C_CONF)") + 
+    ylab("Total Accidents Count") +
+    coord_flip() +
+    theme(legend.position = "top",axis.text.x = element_text(size = 8, 
+      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
+      face="bold"))
+
+#Create new vehicle type numeric variable so its easy to subset and show only a few vehicle types
+# learned that I must convert to character first or else (11 and 10) get converted to 1
+df$V_TYPE_NUM <- as.numeric(as.character(df$V_TYPE))
+bdf <- subset(df,C_CONF != "UU" & C_CONF!= "QQ" & df$V_TYPE_NUM <= 8 & df$V_TYPE_NUM != 1)
+#Drop the old levels which have been subsetted out above
+bdf <- droplevels(bdf)
+#Re-level vehicle types
+levels(bdf$V_TYPE) <- c("05 - VAN","06 - SMALL TRUCKS", "O7 - LARGE TRUCKS",
+                        "08 - TRACTORS")
+# Get the levels for type in the required order
+g2 <- ggplot(aes(x=C_CONF, fill = factor(M,labels=c("Non-Deadly",
+    "Deadly"))), data=bdf) + #only look at a few vehicle types
+    geom_histogram() +
+    scale_fill_manual(values=c("black", "red"), #change the colors - red is Death :(
+                      name = "Collision Severity (M)") + #change legend title
+    ggtitle("Total Accidents by Collision Type for Non-Car Vehicle Types") + 
+    xlab("Collision Type\n(C_CONF)") + 
+    ylab("Total Accidents Count") +
+    coord_flip() +
+    theme(legend.position = "top",axis.text.x = element_text(size = 8, 
+      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
+      face="bold")) +
+    facet_wrap(~V_TYPE)
+multiplot(g1,g2, cols = 2)
 ```
 
-#### Head-on collisions (31) are the deadliest type of collisions for many vehicle types which is not a surprise, but its interesting to see that tractors in particular have a large proportion of deadly head-on collisions. You can also see that vast majority of accidents involve cars (or other light duty vehicles).
+#### Head-on collisions (31) are the deadliest type of collisions for many vehicle types which is not a surprise, but its interesting to see that tractors (08) in particular have a large proportion of deadly head-on collisions. You can also see that vast majority of accidents involve cars (or other light duty vehicles).
 
 ------
 
@@ -894,7 +932,7 @@ ggplot(aes(x=V_TYPE, y=C_CONF, color = factor(M,labels=c("Non-Deadly",
 
 I wasn't able to satisfactorily answer the original question I posed as I need more statistical proof that the variables I suspected as being predictive of deadly crashes (due to the high proportions of these variables in deadly crashes as shown by the plots) are not due to just chance.
 
-The features I would initially choose if I were building a machine learning model to predict deadly crashes are: *P_SEX*, *P_SAFE*, *V_TYPE* and *C_RCFG* ; from the plots they appear to differ the most between deadly/non-deadly crashes.
+The features I would initially choose if I were building a machine learning model to predict deadly crashes are: *P_SEX*, *P_SAFE*, *V_TYPE* and *C_RCFG* because from the plots they appear to differ the most between deadly/non-deadly crashes.
 
 Once I complete the next machine learning course, I will be able to see which classification model would be appropriate. What I did learn through my exploratory analysis is the linear model would not be appropriate in this case.
 

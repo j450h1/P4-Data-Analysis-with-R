@@ -24,6 +24,10 @@ http://stackoverflow.com/questions/11019692/place-annotation-at-the-top-of-a-ser
 
 http://sape.inf.usi.ch/quick-reference/ggplot2/colour
 
+http://stackoverflow.com/questions/15013482/whats-wrong-with-as-numeric-in-r
+
+http://stackoverflow.com/questions/24800626/r-ggplot-transparency-alpha-values-conditional-on-other-variable
+
 
 
 
