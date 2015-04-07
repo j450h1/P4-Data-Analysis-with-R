@@ -24,6 +24,7 @@ library(knitr)
 opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 
 library(ggplot2)
+library(scales) #needed for percent y-scale of 2nd plot
 library(plyr)
 #http://rstudio.github.io/DT/
 library(DT) #new package that allows R data objects to be displayed as tables 
@@ -103,7 +104,6 @@ ggMMplot <- function(var1, var2, xlabel, ylabel, title){
     ylab(ylabel) +
     ggtitle(title)
   }
-
 ```
 
 ### About the Dataset
@@ -785,123 +785,161 @@ g2
 
 
 ### Plot Two
-```{r echo=FALSE,out.width='1000px', dpi=200, Plot_Two}
-#Customized Mosaic Plot function
-ggMMplot <- function(var1, var2, xlabel, ylabel, title){
-  require(ggplot2)
-  levVar1 <- length(levels(var1))
-  levVar2 <- length(levels(var2))
+```{r, echo=FALSE, Plot_Two, out.width='1200px', dpi=200}
+##OLD PLOT 2 - scroll below for new one
+# #Customized Mosaic Plot function
+# ggMMplot <- function(var1, var2, xlabel, ylabel, title){
+#   require(ggplot2)
+#   levVar1 <- length(levels(var1))
+#   levVar2 <- length(levels(var2))
+# 
+#   jointTable <- prop.table(table(var1, var2))
+#   plotData <- as.data.frame(jointTable)
+#   plotData$marginVar1 <- prop.table(table(var1))
+#   plotData$var2Height <- plotData$Freq / plotData$marginVar1
+#   plotData$var1Center <- c(0, cumsum(plotData$marginVar1)[1:levVar1 -1]) +
+#     plotData$marginVar1 / 2
+# 
+#   ggplot(plotData, aes(var1Center, var2Height)) + 
+#     geom_bar(stat = "identity", aes(width = marginVar1, fill = var2), 
+#              col = "Black") +
+#     xlab(xlabel) + #added these three lines and deleted 1 geom_text- Jas
+#     ylab(ylabel) +
+#     ggtitle(title)
+#   }
+# #remove unknown values and only the vehicle types that represent majority 
+# mdf <- subset(df, !(df$P_SAFE %in% c("NN","QQ","UU")) & 
+#           (df$V_TYPE %in% c("01","05","06","07","08"))) 
+# #either a safety device was used or not - 01 - No Safety, all others 2 - Safety
+# mdf$P_SAFE <- ifelse(mdf$P_SAFE == "01","01","02") 
+# 
+# g1 <- ggMMplot(mdf$V_TYPE[mdf$M==1],mdf$P_SAFE[mdf$M==1], "Vehicle Type 
+#         (V_TYPE)", "Safety Device Used (P_SAFE)","Safety Device Used by Vehicle 
+#         Type\n(Deadly Collisions)")
+# g2 <- ggMMplot(mdf$V_TYPE[mdf$M==0],mdf$P_SAFE[mdf$M==0], "Vehicle Type 
+#         (V_TYPE)", "Safety Device Used (P_SAFE)", "Safety Device Used by Vehicle 
+#         Type\n(Non-Deadly Collisions)")
 
-  jointTable <- prop.table(table(var1, var2))
-  plotData <- as.data.frame(jointTable)
-  plotData$marginVar1 <- prop.table(table(var1))
-  plotData$var2Height <- plotData$Freq / plotData$marginVar1
-  plotData$var1Center <- c(0, cumsum(plotData$marginVar1)[1:levVar1 -1]) +
-    plotData$marginVar1 / 2
-
-  ggplot(plotData, aes(var1Center, var2Height)) + 
-    geom_bar(stat = "identity", aes(width = marginVar1, fill = var2), 
-             col = "Black") +
-    xlab(xlabel) + #added these three lines and deleted 1 geom_text- Jas
-    ylab(ylabel) +
-    ggtitle(title)
-  }
-#remove unknown values and only the vehicle types that represent majority 
-mdf <- subset(df, !(df$P_SAFE %in% c("NN","QQ","UU")) & 
-          (df$V_TYPE %in% c("01","05","06","07","08"))) 
-#either a safety device was used or not - 01 - No Safety, all others 2 - Safety
-mdf$P_SAFE <- ifelse(mdf$P_SAFE == "01","01","02") 
-
-g1 <- ggMMplot(mdf$V_TYPE[mdf$M==1],mdf$P_SAFE[mdf$M==1], "Vehicle Type 
-        (V_TYPE)", "Safety Device Used (P_SAFE)","Safety Device Used by Vehicle 
-        Type\n(Deadly Collisions)")
-g2 <- ggMMplot(mdf$V_TYPE[mdf$M==0],mdf$P_SAFE[mdf$M==0], "Vehicle Type 
-        (V_TYPE)", "Safety Device Used (P_SAFE)", "Safety Device Used by Vehicle 
-        Type\n(Non-Deadly Collisions)")
+# g2 + theme(legend.position = "none",axis.text.x = element_text(size = 8, 
+#       angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
+#       face="bold")) +
+#     annotate("text", label = "Safety Device Used", x=0.1 , hjust=0, y=0.5, 
+#              color= "black", size=10) +
+#     annotate("text", label = "Light Duty Vehicles (1)", x=0.0 , 
+#              hjust=0, y=1.05, color= "black", size=5) +
+#     annotate("text", label = "(5)", x=0.93 , hjust=0, y=1.05, 
+#              color= "black", size=3) +
+#     annotate("text", label = "(6)", x=0.95 , hjust=0, y=1.05, 
+#              color= "black", size=3) +
+#     annotate("text", label = "(7)", x=0.97 , hjust=0, y=1.05, 
+#              color= "black", size=3) +
+#     annotate("text", label = "(8)", x=0.99 , hjust=0, y=1.05, 
+#              color= "black", size=3) +
+#     scale_y_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1)) +
+#     scale_x_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1)) 
+# g1 + theme(legend.position = "none",axis.text.x = element_text(size = 8, 
+#       angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
+#       face="bold")) +
+#     annotate("text", label = "No Safety Device Used", x=0.1 , hjust=0, y=0.1, 
+#              color= "black",size=10) +
+#     annotate("text", label = "Safety Device Used", x=0.1 , hjust=0, y=0.5, 
+#              color= "black", size=10) +
+#     annotate("text", label = "Light Duty Vehicles (1)", x=0 , 
+#              hjust=0, y=1.05, color= "black", size=5) +
+#     annotate("text", label = "(5)", x=0.82 , hjust=0, y=1.05, 
+#              color= "black", size=5) +
+#     annotate("text", label = "(6)", x=0.85 , hjust=0, y=1.05, 
+#              color= "black", size=5) +
+#     annotate("text", label = "(7)", x=0.90 , hjust=0, y=1.05, 
+#              color= "black", size=5) +
+#     annotate("text", label = "(8)", x=0.95 , hjust=0, y=1.05, 
+#              color= "black", size=5) +
+#     scale_y_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1)) +
+#     scale_x_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1))
+# ----------------------------------------------------------------------
+### NEW Plot 2
+#Create new vehicle type numeric variable so its easy to subset and show only a few vehicle types
+# learned that I must convert to character first or else (11 and 10) get converted to 1
+df$V_TYPE_NUM <- as.numeric(as.character(df$V_TYPE))
+#table(df$V_TYPE,df$P_SAFE) - Too many levels
+remove_safe <- df$P_SAFE %in% c("NN","QQ","UU") 
+mdf <- subset(df,C_CONF != "UU" & C_CONF!= "QQ" & df$V_TYPE_NUM <= 8 & 
+              !remove_safe) #Not showing vehicle types with very low counts
+mdf <- droplevels(mdf)
+levels(mdf$V_TYPE) <- c("01 - CARS","05 - VAN","06 - SMALL TRUCKS", "O7 - LARGE TRUCKS"      ,"08 - TRACTORS")
+#Relevel into Seat Belt vs No-Seat Belt
+mdf$P_SAFE <- ifelse(mdf$P_SAFE == "01", "NO", "YES")
+mdf$P_SAFE <- factor(mdf$P_SAFE)
+###Non Deadly Collisions
+g1 <- ggplot(aes(x=V_TYPE, fill=P_SAFE), data = subset(mdf, M == 0)) + 
+  geom_bar(aes(y = (..count..)/sum(..count..)), position = "fill") + #height is 100 %
+  scale_y_continuous(breaks = seq(0,1,0.05), labels = percent) +
+  scale_fill_manual(values=c("red", "green"), #change the colors - red is bad
+                    name = "Seat Belt Used?") + 
+  ggtitle("Seat Belt Usage by Vehicle Type\n(Non-Deadly Collisions)") + 
+  xlab("Vehicle Type\n(V_TYPE)") + 
+  ylab("Percent of Non-Deadly Collisions") +
+  theme(legend.position = "top", axis.text=element_text(size=8))
+###Deadly Collisions  
+g2 <- ggplot(aes(x=V_TYPE, fill=P_SAFE), data = subset(mdf, M == 1)) + 
+  geom_bar(aes(y = (..count..)/sum(..count..)), position = "fill") + #height is 100 %
+  scale_y_continuous(breaks = seq(0,1,0.05), labels = percent) + 
+  scale_fill_manual(values=c("red", "green"), #change the colors - red is bad
+                    name = "Seat Belt Used?") + 
+  ggtitle("Seat Belt Usage by Vehicle Type\n(Deadly Collisions)") + 
+  xlab("Vehicle Type\n(V_TYPE)") + 
+  ylab("Percent of Deadly Collisions") +
+  theme(legend.position = "top", axis.text=element_text(size=8))
+#multiplot(g1,g2, cols = 2)  doesn't look good in html
 ```
 
-```{r, out.width='1000px', dpi=200}
-g2 + theme(legend.position = "none",axis.text.x = element_text(size = 8, 
-      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
-      face="bold")) +
-    annotate("text", label = "Safety Device Used", x=0.1 , hjust=0, y=0.5, 
-             color= "black", size=10) +
-    annotate("text", label = "Light Duty Vehicles (1)", x=0.0 , 
-             hjust=0, y=1.05, color= "black", size=5) +
-    annotate("text", label = "(5)", x=0.93 , hjust=0, y=1.05, 
-             color= "black", size=3) +
-    annotate("text", label = "(6)", x=0.95 , hjust=0, y=1.05, 
-             color= "black", size=3) +
-    annotate("text", label = "(7)", x=0.97 , hjust=0, y=1.05, 
-             color= "black", size=3) +
-    annotate("text", label = "(8)", x=0.99 , hjust=0, y=1.05, 
-             color= "black", size=3) +
-    scale_y_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1)) +
-    scale_x_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1)) 
+```{r}
+#Would have liked to plot side by side, but just too squeezed in
+g1
 ```
 
-```{r, fig.width=8, fig.height=6}
-g1 + theme(legend.position = "none",axis.text.x = element_text(size = 8, 
-      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
-      face="bold")) +
-    annotate("text", label = "No Safety Device Used", x=0.1 , hjust=0, y=0.1, 
-             color= "black",size=10) +
-    annotate("text", label = "Safety Device Used", x=0.1 , hjust=0, y=0.5, 
-             color= "black", size=10) +
-    annotate("text", label = "Light Duty Vehicles (1)", x=0 , 
-             hjust=0, y=1.05, color= "black", size=5) +
-    annotate("text", label = "(5)", x=0.82 , hjust=0, y=1.05, 
-             color= "black", size=5) +
-    annotate("text", label = "(6)", x=0.85 , hjust=0, y=1.05, 
-             color= "black", size=5) +
-    annotate("text", label = "(7)", x=0.90 , hjust=0, y=1.05, 
-             color= "black", size=5) +
-    annotate("text", label = "(8)", x=0.95 , hjust=0, y=1.05, 
-             color= "black", size=5) +
-    scale_y_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1)) +
-    scale_x_continuous(breaks = seq(0,1,0.1), labels = seq(0,1,0.1))  
+```{r}
+g2
 ```
 
-#### We can see that light duty vehicles (1) represent the largest proportion of all collisions (including deadly collisions). A large proportion of deadly accidents also occured when no safety device (RED), such as a seatbelt, was used. This is consistent across vehicle types.
+#### We can see that deadly collisions involved a larger proportion of drivers who didn't wear a seatbelt (or other safety device) compared to non-deadly collisions and this is consistent across vehicle types. For non-deadly collisions, the largest proportion of drivers who didn't wear their seatbelts were drivers of large trucks (07) and tractors (08). However, for deadly collisions, drivers of vans (05) and small trucks (06) had the largest proportion of deaths. 
 
 ### Plot Three
-```{r, echo=FALSE, Plot_Three, out.width='1000px', dpi=200}
-#No need to manually rename all the labels, only the one that is interesting
-collision_types <- levels(df$C_CONF)
-#length(collision_types) #need to know the length so I can subset out UU & QQ
-collision_types <- collision_types[1:18] #subset out UU & QQ
-collision_types[which(collision_types == "31")] <- "31 - Head-on collision"
-ggplot(aes(x=V_TYPE, y=C_CONF, color = factor(M,labels=c("Non-Deadly",
-    "Deadly"))), data=subset(df,C_CONF != "UU" & C_CONF != "QQ")) + 
-    geom_point(position="jitter") + 
-    ggtitle("Vehicle Type vs Collision Type") + 
-    xlab("Vehicle Type\n(V_TYPE)") + 
-    ylab("Collision Type\n(C_CONF)") +
-    theme(legend.position = "top",axis.text.x = element_text(size = 8, 
-      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
-      face="bold")) +
-    scale_x_discrete(labels = vehicle_types) + #vehicle types created earlier
-    labs(color="Collision Severity") #rename legend
-
-#Redo Plot 3 - Easier to show this using a facetted bar plot
+```{r, echo=FALSE, Plot_Three, out.width='1200px', dpi=200}
+###OLD PLOT THREE - see below for new one###
+# ##No need to manually rename all the labels, only the one that is interesting
+# collision_types <- levels(df$C_CONF)
+# ##length(collision_types) #need to know the length so I can subset out UU & QQ
+# collision_types <- collision_types[1:18] #subset out UU & QQ
+# collision_types[which(collision_types == "31")] <- "31 - Head-on collision"
+# ggplot(aes(x=V_TYPE, y=C_CONF, color = factor(M,labels=c("Non-Deadly",
+#     "Deadly"))), data=subset(df,C_CONF != "UU" & C_CONF != "QQ")) + 
+#     geom_point(position="jitter") + 
+#     ggtitle("Vehicle Type vs Collision Type") + 
+#     xlab("Vehicle Type\n(V_TYPE)") + 
+#     ylab("Collision Type\n(C_CONF)") +
+#     theme(legend.position = "top",axis.text.x = element_text(size = 8, 
+#       angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
+#       face="bold")) +
+#     scale_x_discrete(labels = vehicle_types) + #vehicle types created earlier
+#     labs(color="Collision Severity") #rename legend
+# ---------------------------------------------------------------------------------
+#Redo Plot 3 - Easier to show this using a facetted bar plot/histogram
 #Plot Car separately - tried plotting all on log scale together, but easier to see contrast if its separate
+### Car Plot
 g1 <-ggplot(aes(x=C_CONF, fill = factor(M,labels=c("Non-Deadly",
     "Deadly"))), data=subset(df,C_CONF != "UU" & C_CONF!= "QQ")) + #only look at a few vehicle types
     geom_histogram() +
     scale_fill_manual(values=c("black", "red"), #change the colors - red is Death :(
-                      name = "Collision Severity (M)") + #change legend title
-    ggtitle("Total Accidents by Collision Types for Cars") + 
+                      name = "") + #no legend title name needed
+    ggtitle("Total Collisions by Collision Type\n(Cars)") + 
     xlab("Collision Type\n(C_CONF)") + 
-    ylab("Total Accidents Count") +
+    ylab("Number of Collisions") +
     coord_flip() +
-    theme(legend.position = "top",axis.text.x = element_text(size = 8, 
-      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
-      face="bold"))
+    theme(legend.position = "top", axis.text=element_text(size=8))
 
-#Create new vehicle type numeric variable so its easy to subset and show only a few vehicle types
-# learned that I must convert to character first or else (11 and 10) get converted to 1
-df$V_TYPE_NUM <- as.numeric(as.character(df$V_TYPE))
 bdf <- subset(df,C_CONF != "UU" & C_CONF!= "QQ" & df$V_TYPE_NUM <= 8 & df$V_TYPE_NUM != 1)
+### OTHER VEHICLES PLOT
 #Drop the old levels which have been subsetted out above
 bdf <- droplevels(bdf)
 #Re-level vehicle types
@@ -912,19 +950,26 @@ g2 <- ggplot(aes(x=C_CONF, fill = factor(M,labels=c("Non-Deadly",
     "Deadly"))), data=bdf) + #only look at a few vehicle types
     geom_histogram() +
     scale_fill_manual(values=c("black", "red"), #change the colors - red is Death :(
-                      name = "Collision Severity (M)") + #change legend title
-    ggtitle("Total Accidents by Collision Type for Non-Car Vehicle Types") + 
+                      name = "") + #no legend title name needed
+    ggtitle("Total Collisions by Collision Type\n(Other Vehicle Types)") + 
     xlab("Collision Type\n(C_CONF)") + 
-    ylab("Total Accidents Count") +
+    ylab("Number of Collisions") +
     coord_flip() +
-    theme(legend.position = "top",axis.text.x = element_text(size = 8, 
-      angle = 0, vjust = 0.5, hjust=1),plot.title = element_text(lineheight=.8, 
-      face="bold")) +
+    theme(legend.position = "top", axis.text=element_text(size=6)) +
     facet_wrap(~V_TYPE)
-multiplot(g1,g2, cols = 2)
+#multiplot(g1,g2, cols = 2) #doesn't look good in html
 ```
 
-#### Head-on collisions (31) are the deadliest type of collisions for many vehicle types which is not a surprise, but its interesting to see that tractors (08) in particular have a large proportion of deadly head-on collisions. You can also see that vast majority of accidents involve cars (or other light duty vehicles).
+```{r}
+#Would have liked to plot side by side, but just too squeezed in
+g1
+```
+
+```{r}
+g2
+```
+
+#### Rear-end collisions (21) are by far the most common type of collisions across many vehicle types. However, head-on collisions (31) are the deadliest type of collisions. Its interesting to see that tractors in particular have a large proportion of deadly head-on collisions. You can also see that vast majority of accidents involve cars (i.e. light duty vehicles) and they are literally on a different scale compared with other vehicle types.
 
 ------
 

@@ -26,8 +26,19 @@ http://sape.inf.usi.ch/quick-reference/ggplot2/colour
 
 http://stackoverflow.com/questions/15013482/whats-wrong-with-as-numeric-in-r
 
-http://stackoverflow.com/questions/24800626/r-ggplot-transparency-alpha-values-conditional-on-other-variable
+http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
 
+http://stackoverflow.com/questions/15130497/changing-ggplot-factor-colors
+
+http://docs.ggplot2.org/0.9.3.1/coord_flip.html
+
+http://stackoverflow.com/questions/1195826/dropping-factor-levels-in-a-subsetted-data-frame-in-r
+
+http://www.cyclismo.org/tutorial/R/intermediatePlotting.html
+
+https://groups.google.com/forum/#!topic/ggplot2/SmSYHuvkCLY
+
+http://stackoverflow.com/questions/1330989/rotating-and-spacing-axis-labels-in-ggplot2
 
 
 
